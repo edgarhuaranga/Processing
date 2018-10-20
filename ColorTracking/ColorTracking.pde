@@ -8,7 +8,7 @@ import processing.video.*;
 Capture video;
 
 color trackColor; 
-float threshold = 25;
+float parametro = 25;
 
 void setup() {
   size(640, 360);
@@ -28,10 +28,7 @@ void draw() {
   image(video, 0, 0);
 
   //threshold = map(mouseX, 0, width, 0, 100);
-  threshold = 80;
-
-  float avgX = 0;
-  float avgY = 0;
+  parametro = 10;
 
   int count = 0;
 
@@ -48,30 +45,18 @@ void draw() {
       float g2 = green(trackColor);
       float b2 = blue(trackColor);
 
-      float d = distSq(r1, g1, b1, r2, g2, b2); 
+      float d = dist(r1, g1, b1, r2, g2, b2); 
 
-      if (d < threshold*threshold) {
+      if (d < parametro) {
         stroke(255);
         strokeWeight(1);
         point(x, y);
-        avgX += x;
-        avgY += y;
         count++;
       }
     }
   }
 
-  // We only consider the color found if its color distance is less than 10. 
-  // This threshold of 10 is arbitrary and you can adjust this number depending on how accurate you require the tracking to be.
-  if (count > 0) { 
-    avgX = avgX / count;
-    avgY = avgY / count;
-    // Draw a circle at the tracked pixel
-    fill(255);
-    strokeWeight(4.0);
-    stroke(0);
-    ellipse(avgX, avgY, 24, 24);
-  }
+ 
 }
 
 float distSq(float x1, float y1, float z1, float x2, float y2, float z2) {
