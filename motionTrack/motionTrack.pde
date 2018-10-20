@@ -1,37 +1,40 @@
-// Daniel Shiffman
-// http://codingtra.in
-// http://patreon.com/codingtrain
-// Code for: https://youtu.be/nCVZHROb_dE
-
 import processing.video.*;
 
 Capture video;
+PImage prev;
 
-color trackColor; 
-float parametro = 25;
+float threshold = 25;
+
+float motionX = 0;
+float motionY = 0;
+
+float lerpX = 0;
+float lerpY = 0;
 
 void setup() {
-  size(640, 360);
+  size(640, 480);
   String[] cameras = Capture.list();
   printArray(cameras);
   video = new Capture(this, cameras[0]);
   video.start();
-  trackColor = color(255, 0, 0);
+  prev = createImage(640, 480, RGB);
+  // Start off tracking for red
 }
 
 void captureEvent(Capture video) {
+  prev.copy(video, 0, 0, video.width, video.height, 0, 0, prev.width, prev.height);
+  prev.updatePixels();
   video.read();
 }
 
 void draw() {
   video.loadPixels();
+  prev.loadPixels();
   image(video, 0, 0);
 
-  parametro = map(mouseX, 0, width, 0, 100);
-  //parametro = 50;
+  threshold = 10;
 
-  int count = 0;
-
+  loadPixels();
   // Begin loop to walk through every pixel
   for (int x = 0; x < video.width; x++ ) {
     for (int y = 0; y < video.height; y++ ) {
@@ -41,31 +44,30 @@ void draw() {
       float r1 = red(currentColor);
       float g1 = green(currentColor);
       float b1 = blue(currentColor);
-      float r2 = red(trackColor);
-      float g2 = green(trackColor);
-      float b2 = blue(trackColor);
+      color prevColor = prev.pixels[loc];
+      float r2 = red(prevColor);
+      float g2 = green(prevColor);
+      float b2 = blue(prevColor);
 
-      float d = dist(r1, g1, b1, r2, g2, b2); 
+      float d = distSq(r1, g1, b1, r2, g2, b2); 
 
-      if (d < parametro) {
-        stroke(255, 0, 0);
-        strokeWeight(1);
-        point(x, y);
-        count++;
+      if (d > threshold*threshold) {    
+        pixels[loc] = color(255);// hubo movimiento
+      } else {
+        pixels[loc] = color(0, 0, 255);
       }
     }
   }
+  updatePixels();
 
  
+  //image(video, 0, 0, 100, 100);
+  //image(prev, 100, 0, 100, 100);
+
+  //println(mouseX, threshold);
 }
 
 float distSq(float x1, float y1, float z1, float x2, float y2, float z2) {
   float d = (x2-x1)*(x2-x1) + (y2-y1)*(y2-y1) +(z2-z1)*(z2-z1);
   return d;
-}
-
-void mousePressed() {
-  // Save color where the mouse is clicked in trackColor variable
-  int loc = mouseX + mouseY*video.width;
-  trackColor = video.pixels[loc];
 }
